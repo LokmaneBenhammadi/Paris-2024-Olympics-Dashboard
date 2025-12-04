@@ -1,45 +1,58 @@
 # Paris 2024 Olympics Dashboard Configuration
 
 # ============================================================================
-# COLOR SCHEMES
+# COLOR SCHEMES - Based on Official Paris 2024 Logo (DARK MODE)
 # ============================================================================
 
-# Paris 2024 Official Colors
+# Paris 2024 Official Colors (Dark Mode Optimized)
 COLORS = {
-    'primary': '#FF6B9D',      # Paris 2024 Pink
-    'secondary': '#0085CA',    # Olympic Blue
-    'gold': '#FFD700',
+    'primary': '#D4AF37',      # Gold flame (main logo color)
+    'secondary': '#0085C7',    # Olympic Blue
+    'gold': '#D4AF37',         # Medal gold (matches flame)
     'silver': '#C0C0C0',
     'bronze': '#CD7F32',
-    'background': '#F8F9FA',
-    'text': '#212529',
-    'success': '#28A745',
-    'warning': '#FFC107',
-    'danger': '#DC3545'
+    'background': '#0E1117',   # Dark background
+    'secondary_bg': '#1A1D24', # Slightly lighter dark
+    'card_bg': '#262730',      # Card background
+    'text': '#FAFAFA',         # Light text
+    'text_secondary': '#B0B0B0',
+    'success': '#00A651',      # Olympic Green
+    'warning': '#FCBF49',      # Olympic Yellow
+    'danger': '#EE334E',       # Olympic Red
+    'accent': '#0085C7'        # Olympic Blue
 }
 
 # Medal colors for charts
 MEDAL_COLORS = {
-    'Gold': '#FFD700',
+    'Gold': '#D4AF37',    # Rich gold from flame
     'Silver': '#C0C0C0',
     'Bronze': '#CD7F32'
 }
 
-# Continent colors
+# Olympic Rings Colors (for advanced visualizations)
+OLYMPIC_RINGS = {
+    'Blue': '#0085C7',
+    'Yellow': '#FCB131',
+    'Black': '#000000',
+    'Green': '#00A651',
+    'Red': '#EE334E'
+}
+
+# Continent colors (using Olympic ring colors)
 CONTINENT_COLORS = {
-    'Europe': '#0085CA',
-    'Asia': '#FF6B9D',
-    'Africa': '#28A745',
-    'North America': '#FFC107',
-    'South America': '#DC3545',
-    'Oceania': '#6F42C1'
+    'Europe': '#0085C7',       # Blue ring
+    'Asia': '#FCB131',         # Yellow ring
+    'Africa': '#D4AF37',       # Gold (better visibility in dark)
+    'North America': '#EE334E', # Red ring
+    'South America': '#00A651', # Green ring
+    'Oceania': '#0085C7'       # Blue ring (shared with Europe)
 }
 
 # ============================================================================
 # APP SETTINGS
 # ============================================================================
 
-APP_TITLE = "🏅 Paris 2024 Olympics Dashboard"
+APP_TITLE = "🔥 Paris 2024 Olympics Dashboard"
 APP_SUBTITLE = "LA28 Volunteer Selection Challenge"
 PAGE_ICON = "🏅"
 
@@ -102,12 +115,12 @@ CHART_HEIGHT = {
     'large': 700
 }
 
-# Plotly layout template
-PLOTLY_TEMPLATE = 'plotly_white'
+# Plotly layout template (dark mode)
+PLOTLY_TEMPLATE = 'plotly_dark'
 
 # Map settings
 MAP_SETTINGS = {
-    'mapbox_style': 'carto-positron',
+    'mapbox_style': 'carto-darkmatter',
     'zoom': 1,
     'center': {'lat': 48.8566, 'lon': 2.3522}  # Paris coordinates
 }
@@ -117,7 +130,7 @@ MAP_SETTINGS = {
 # ============================================================================
 
 WELCOME_TEXT = """
-Welcome to the **Paris 2024 Olympics Dashboard**! 🏅
+Welcome to the **Paris 2024 Olympics Dashboard**! 🔥
 
 This interactive dashboard provides comprehensive insights into the Paris 2024 Olympic Games.
 Explore athlete performances, medal distributions, global trends, and event schedules.
@@ -210,7 +223,7 @@ CONTINENT_MAP = {
 }
 
 # ============================================================================
-# COUNTRY FLAG EMOJIS (Sample - add more as needed)
+# COUNTRY FLAG EMOJIS
 # ============================================================================
 
 FLAG_EMOJI = {

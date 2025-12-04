@@ -1,0 +1,357 @@
+/* Paris 2024 Olympics Dashboard - DARK MODE with Olympic Colors */
+
+/* ============================================================================
+   GLOBAL STYLES - Dark Theme
+   ============================================================================ */
+
+.stApp {
+    background: linear-gradient(135deg, #0E1117 0%, #1A1D24 100%);
+    color: #FAFAFA;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1A1D24 0%, #0E1117 100%);
+    border-right: 3px solid #D4AF37;
+    box-shadow: 2px 0 20px rgba(212, 175, 55, 0.2);
+}
+
+/* ============================================================================
+   HEADER & TITLES - Gold gradient on dark
+   ============================================================================ */
+
+h1 {
+    color: #FAFAFA !important;
+    font-weight: 800 !important;
+    text-align: center;
+    padding: 20px 0;
+    background: linear-gradient(90deg, #D4AF37 0%, #FCB131 50%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}
+
+h2 {
+    color: #FAFAFA !important;
+    font-weight: 700 !important;
+    border-left: 5px solid #D4AF37;
+    padding-left: 15px;
+}
+
+h3 {
+    color: #B0B0B0 !important;
+    font-weight: 600 !important;
+}
+
+/* ============================================================================
+   METRICS - Glowing gold effect
+   ============================================================================ */
+
+[data-testid="stMetricValue"] {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+    color: #D4AF37 !important;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 1rem !important;
+    color: #FAFAFA !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+[data-testid="stMetricDelta"] > div {
+    color: #00A651 !important;
+}
+
+/* ============================================================================
+   BUTTONS - Glowing Olympic style
+   ============================================================================ */
+
+.stButton > button {
+    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    color: #000000;
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #0085C7 0%, #00A651 100%);
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0, 133, 199, 0.6);
+}
+
+/* ============================================================================
+   FILTERS - Dark with gold accents
+   ============================================================================ */
+
+.stSelectbox > div > div {
+    border-radius: 10px;
+    border: 2px solid #D4AF37;
+    background-color: #262730;
+    color: #FAFAFA;
+}
+
+.stMultiSelect > div > div {
+    border-radius: 10px;
+    border: 2px solid #0085C7;
+    background-color: #262730;
+    color: #FAFAFA;
+}
+
+.stSlider > div > div > div {
+    background: linear-gradient(90deg, #D4AF37 0%, #FCB131 100%) !important;
+}
+
+/* Input fields */
+input {
+    background-color: #262730 !important;
+    color: #FAFAFA !important;
+    border: 2px solid #D4AF37 !important;
+}
+
+/* ============================================================================
+   DATA TABLES - Dark cards
+   ============================================================================ */
+
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    border: 2px solid #D4AF37;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    background-color: #262730;
+}
+
+/* ============================================================================
+   CHARTS - Dark cards with glowing borders
+   ============================================================================ */
+
+[data-testid="stPlotlyChart"] {
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
+    padding: 20px;
+    background-color: #1A1D24;
+    border: 1px solid #D4AF37;
+    transition: all 0.3s ease;
+}
+
+[data-testid="stPlotlyChart"]:hover {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+    border-color: #FCB131;
+}
+
+/* ============================================================================
+   TABS - Olympic rings inspired
+   ============================================================================ */
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 10px;
+    background-color: transparent;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: #262730;
+    border-radius: 10px 10px 0 0;
+    padding: 12px 24px;
+    font-weight: 600;
+    color: #FAFAFA;
+    border: 2px solid transparent;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    color: #000000 !important;
+    border-color: #D4AF37;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ============================================================================
+   EXPANDERS - Gold glow effect
+   ============================================================================ */
+
+.streamlit-expanderHeader {
+    background-color: #262730;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #FAFAFA;
+    border-left: 4px solid #D4AF37;
+    padding-left: 15px;
+}
+
+.streamlit-expanderHeader:hover {
+    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    color: #000000;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================================================
+   SIDEBAR FILTERS
+   ============================================================================ */
+
+[data-testid="stSidebar"] .stRadio > label {
+    color: #FAFAFA;
+    font-weight: 600;
+}
+
+[data-testid="stSidebar"] h3 {
+    color: #D4AF37 !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================================================
+   INFO/SUCCESS/WARNING BOXES - Olympic colors with glow
+   ============================================================================ */
+
+.stAlert {
+    border-radius: 10px;
+    border-left: 5px solid #D4AF37;
+    background-color: #262730;
+    color: #FAFAFA;
+}
+
+div[data-baseweb="notification"] {
+    background-color: #262730;
+    border-left: 5px solid #D4AF37;
+}
+
+/* Success boxes */
+.stSuccess {
+    background-color: rgba(0, 166, 81, 0.1);
+    border-left-color: #00A651;
+}
+
+/* Info boxes */
+.stInfo {
+    background-color: rgba(0, 133, 199, 0.1);
+    border-left-color: #0085C7;
+}
+
+/* Warning boxes */
+.stWarning {
+    background-color: rgba(252, 191, 73, 0.1);
+    border-left-color: #FCBF49;
+}
+
+/* Error boxes */
+.stError {
+    background-color: rgba(238, 51, 78, 0.1);
+    border-left-color: #EE334E;
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+
+footer {
+    visibility: hidden;
+}
+
+.custom-footer {
+    text-align: center;
+    padding: 30px;
+    color: #B0B0B0;
+    font-size: 0.9rem;
+    border-top: 3px solid #D4AF37;
+    margin-top: 50px;
+    background-color: #1A1D24;
+}
+
+/* ============================================================================
+   TEXT COLORS
+   ============================================================================ */
+
+p, span, div {
+    color: #FAFAFA;
+}
+
+label {
+    color: #FAFAFA !important;
+}
+
+/* ============================================================================
+   ANIMATIONS - Glowing effects
+   ============================================================================ */
+
+@keyframes goldGlow {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stApp > header {
+    animation: fadeIn 0.8s ease-in;
+}
+
+/* ============================================================================
+   SCROLLBAR - Dark with gold accent
+   ============================================================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1A1D24;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #FCB131 0%, #D4AF37 100%);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8rem !important;
+    }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+    }
+    
+    .stButton > button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ============================================================================
+   SPECIAL EFFECTS - Olympic Flame Glow
+   ============================================================================ */
+
+.metric-card-gold {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+    animation: goldGlow 3s ease-in-out infinite;
+}
