@@ -1,4 +1,8 @@
-# 🏅 Paris 2024 Olympics Dashboard
+# Paris 2024 Olympics Dashboard
+
+<p align="center">
+  <img src="assets/logo.png" alt="Paris 2024 Olympics Logo" width="400"/>
+</p>
 
 **An interactive multi-page Streamlit dashboard for exploring the Paris 2024 Olympic Games data**
 
@@ -22,25 +26,25 @@ This dashboard analyzes comprehensive data from the Paris 2024 Olympic Games, pr
 
 ```
 streamlit_project/
-├── app.py                          # Main entry point
+├── Overview.py # Main entry point
 ├── pages/
-│   ├── 1_Overview.py
-│   ├── 2_Global_Analysis.py
-│   ├── 3_Athlete_Performance.py
-│   ├── 4_Sports_and_Events.py
-│   ├── 5_Advanced_Analytics.py
-│   └── 6_Country_Comparison.py
+│ ├── 2_Global_Analysis.py
+│ ├── 3_Athlete_Performance.py
+│ ├── 4_Sports_and_Events.py
+│ ├── 5_Advanced_Analytics.py
+│ └── 6_Country_Comparison.py
 ├── utils/
-│   ├── data_loader.py
-│   ├── data_processor.py
-│   ├── filters.py
-│   ├── visualizations.py
-│   └── continent_mapper.py
+│ ├── data_loader.py
+│ ├── data_processor.py
+│ ├── filters.py
+│ ├── visualizations.py
+│ └── continent_mapper.py
 ├── config/
-│   └── config.py
+│ └── config.py
 ├── assets/
-│   └── styles.css
-├── data/                           # CSV files here
+│ ├── logo.png
+│ └── styles.css
+├── data/ # CSV files here
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
@@ -55,8 +59,8 @@ streamlit_project/
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/paris-2024-olympics-dashboard.git
-cd paris-2024-olympics-dashboard
+git clone https://github.com/LokmaneBenhammadi/Paris-2024-Olympics-Dashboard.git
+cd Paris-2024-Olympics-Dashboard
 
 # Run with Docker Compose
 docker-compose up --build
@@ -71,7 +75,7 @@ docker-compose up --build
 pip install -r requirements.txt
 
 # Run app
-streamlit run app.py
+streamlit run Overview.py
 ```
 
 ---
@@ -156,9 +160,8 @@ Download the dataset from [Kaggle Paris 2024 Olympics](https://www.kaggle.com/da
 
 **[Your Team Name]**
 
-- Benhammadi Lokmane
-- Benblal Badr-eddin Adam
-- Belkaid Yacine
+- BENHAMMADI Lokmane
+- BELKAID Abderrahmane yassine hamza
 
 ---
 
@@ -169,10 +172,6 @@ Download the dataset from [Kaggle Paris 2024 Olympics](https://www.kaggle.com/da
 **Institution:** ESI-SBA
 
 **Instructor:** Dr. Belkacem KHALDI
-
-**Submission:** Early Bird (48 hours) - 100% eligible
-
-**Presentation:** December 7, 2025
 
 ---
 
@@ -202,7 +201,7 @@ MIT License - Dataset from [Kaggle](https://www.kaggle.com/datasets/piterfm/pari
 
 ## 🔗 Links
 
-**Repository:** [GitHub Link]
+**Repository:** https://github.com/LokmaneBenhammadi/Paris-2024-Olympics-Dashboard
 
 **Live Demo:** [Streamlit Cloud Link]
 
