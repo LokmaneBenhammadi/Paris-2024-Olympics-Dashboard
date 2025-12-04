@@ -6,11 +6,13 @@
 
 # Paris 2024 Official Colors (Dark Mode Optimized)
 COLORS = {
-    'primary': '#D4AF37',      # Gold flame (main logo color)
+    'primary': '#C8D647',      # Paris 2024 Lime Green (flame color)
     'secondary': '#0085C7',    # Olympic Blue
-    'gold': '#D4AF37',         # Medal gold (matches flame)
-    'silver': '#C0C0C0',
-    'bronze': '#CD7F32',
+    'gold': '#FFD700',         # Medal gold
+    'silver': '#C0C0C0',       # Medal silver
+    'bronze': '#CD7F32',       # Medal bronze
+    'paris_green': '#C8D647',  # Paris 2024 signature green
+    'paris_green_dark': '#A8C520',  # Darker shade for gradients
     'background': '#0E1117',   # Dark background
     'secondary_bg': '#1A1D24', # Slightly lighter dark
     'card_bg': '#262730',      # Card background
@@ -24,9 +26,9 @@ COLORS = {
 
 # Medal colors for charts
 MEDAL_COLORS = {
-    'Gold': '#D4AF37',    # Rich gold from flame
-    'Silver': '#C0C0C0',
-    'Bronze': '#CD7F32'
+    'Gold': '#FFD700',    # Traditional gold
+    'Silver': '#C0C0C0',  # Traditional silver
+    'Bronze': '#CD7F32'   # Traditional bronze
 }
 
 # Olympic Rings Colors (for advanced visualizations)
@@ -42,7 +44,7 @@ OLYMPIC_RINGS = {
 CONTINENT_COLORS = {
     'Europe': '#0085C7',       # Blue ring
     'Asia': '#FCB131',         # Yellow ring
-    'Africa': '#D4AF37',       # Gold (better visibility in dark)
+    'Africa': '#000000',       # Black ring
     'North America': '#EE334E', # Red ring
     'South America': '#00A651', # Green ring
     'Oceania': '#0085C7'       # Blue ring (shared with Europe)
@@ -163,7 +165,7 @@ CONTINENT_MAP = {
     'LIE': 'Europe', 'LTU': 'Europe', 'LUX': 'Europe', 'MDA': 'Europe',
     'MKD': 'Europe', 'MLT': 'Europe', 'MON': 'Europe', 'MNE': 'Europe',
     'NED': 'Europe', 'NOR': 'Europe', 'POL': 'Europe', 'POR': 'Europe',
-    'ROU': 'Europe', 'RSA': 'Europe', 'RUS': 'Europe', 'SRB': 'Europe',
+    'ROU': 'Europe', 'RSA': 'Africa', 'RUS': 'Europe', 'SRB': 'Europe',
     'SVK': 'Europe', 'SLO': 'Europe', 'SMR': 'Europe', 'SUI': 'Europe',
     'SWE': 'Europe', 'TUR': 'Europe', 'UKR': 'Europe',
     

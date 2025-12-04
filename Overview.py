@@ -1,236 +1,304 @@
+"""
+Page 1: Overview - The Command Center
+High-level summary of Paris 2024 Olympic Games
+"""
+
 import streamlit as st
+from pathlib import Path
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+from config.config import COLORS, PAGE_CONFIG, MEDAL_COLORS
+from utils.data_loader import load_athletes, load_medals_total, load_nocs, load_events, load_medals
+from utils.data_processor import add_continent_to_dataframe, normalize_medal_columns
+from utils.filters import create_sidebar_filters, apply_filters, show_filter_summary
+from utils.metrics import (
+    calculate_total_athletes, calculate_total_countries, calculate_total_sports,
+    calculate_total_medals, calculate_total_events, calculate_medal_distribution
+)
+from utils.visualizations import create_medal_distribution_pie, create_top_countries_bar
 
 # Page configuration
-st.set_page_config(
-    page_title="Paris 2024 Olympics Dashboard",
-    page_icon="🏅",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(**PAGE_CONFIG)
 
-# Custom CSS for better styling
-st.markdown("""
-    <style>
-    .main-title {
-        font-size: 3rem;
-        font-weight: bold;
-        text-align: center;
-        color: #0066cc;
-        margin-bottom: 1rem;
-    }
-    .subtitle {
-        font-size: 1.2rem;
-        text-align: center;
-        color: #666;
-        margin-bottom: 2rem;
-    }
-    </style>
+# Load custom CSS
+css_file = Path("assets/styles.css")
+if css_file.exists():
+    with open(css_file) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# ===== HEADER =====
+st.markdown("<div style='text-align: center; padding: 20px 0;'>", unsafe_allow_html=True)
+logo_path = Path("assets/logo.png")
+if logo_path.exists():
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image(str(logo_path), use_container_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown(f"""
+<h1 style='text-align: center; color: {COLORS['paris_green']}; font-size: 2.5rem; margin: 0;'>
+    Paris 2024 Olympics Dashboard
+</h1>
+<h3 style='text-align: center; color: {COLORS['text_secondary']}; font-weight: 400; margin-top: 10px;'>
+    🏠 The Command Center - Your Gateway to Olympic Excellence
+</h3>
+<hr style='border: 1px solid {COLORS['paris_green']}; margin: 20px 0;'>
 """, unsafe_allow_html=True)
 
-# Load data function with caching
+# Welcome message
+st.markdown(f"""
+<div style='background: {COLORS['card_bg']}; padding: 20px; border-radius: 10px; border-left: 5px solid {COLORS['paris_green']}; margin-bottom: 20px;'>
+    <p style='color: {COLORS['text']}; font-size: 1.1rem; margin: 0;'>
+        Welcome to the <strong>Paris 2024 Olympics Dashboard</strong>! 🔥<br><br>
+        This interactive command center provides comprehensive insights into the Paris 2024 Olympic Games.
+        Explore athlete performances, medal distributions, global trends, and event schedules.<br><br>
+        <strong>👈 Use the sidebar</strong> to navigate between pages and apply filters!
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ===== DATA LOADING =====
 @st.cache_data
-def load_data():
-    try:
-        athletes = pd.read_csv('data/athletes.csv')
-        medals_total = pd.read_csv('data/medals_total.csv')
-        events = pd.read_csv('data/events.csv')
-        nocs = pd.read_csv('data/nocs.csv')
-        medals = pd.read_csv('data/medals.csv')
-        return athletes, medals_total, events, nocs, medals
-    except Exception as e:
-        st.error(f"Error loading data: {e}")
-        return None, None, None, None, None
+def load_all_overview_data():
+    """Load and prepare all data for overview page."""
+    athletes_df = load_athletes()
+    medals_total_df = load_medals_total()
+    nocs_df = load_nocs()
+    events_df = load_events()
+    medals_df = load_medals()
+    
+    # Normalize and add continent info
+    if not medals_total_df.empty:
+        medals_total_df = normalize_medal_columns(medals_total_df)
+        medals_total_df = add_continent_to_dataframe(medals_total_df)
+    
+    return athletes_df, medals_total_df, nocs_df, events_df, medals_df
 
-# Load all data
-athletes, medals_total, events, nocs, medals = load_data()
+athletes_df, medals_total_df, nocs_df, events_df, medals_df = load_all_overview_data()
 
-# Add continent mapping to NOCs
-continent_mapping = {
-    'USA': 'North America', 'CAN': 'North America', 'MEX': 'North America',
-    'CHN': 'Asia', 'JPN': 'Asia', 'KOR': 'Asia', 'IND': 'Asia', 'THA': 'Asia',
-    'GBR': 'Europe', 'FRA': 'Europe', 'GER': 'Europe', 'ITA': 'Europe', 'ESP': 'Europe',
-    'RUS': 'Europe', 'NED': 'Europe', 'SUI': 'Europe', 'POL': 'Europe', 'UKR': 'Europe',
-    'AUS': 'Oceania', 'NZL': 'Oceania',
-    'BRA': 'South America', 'ARG': 'South America', 'COL': 'South America',
-    'RSA': 'Africa', 'EGY': 'Africa', 'KEN': 'Africa', 'ETH': 'Africa', 'NGR': 'Africa'
-}
+# ===== FILTERS =====
+filters = create_sidebar_filters(athletes_df, medals_total_df, events_df)
 
-# SIDEBAR FILTERS
-st.sidebar.header("🎯 Global Filters")
+filtered_athletes = apply_filters(athletes_df, filters) if not athletes_df.empty else athletes_df
+filtered_medals_total = apply_filters(medals_total_df, filters) if not medals_total_df.empty else medals_total_df
+filtered_events = apply_filters(events_df, filters) if not events_df.empty else events_df
 
-# Get unique values for filters
-if medals_total is not None and events is not None:
-    all_countries = sorted(medals_total['country'].unique())
-    all_sports = sorted(events['sport'].unique()) if 'sport' in events.columns else []
-    
-    # Country filter
-    selected_countries = st.sidebar.multiselect(
-        "Select Countries",
-        options=all_countries,
-        default=[]
-    )
-    
-    # Sport filter
-    selected_sports = st.sidebar.multiselect(
-        "Select Sports",
-        options=all_sports,
-        default=[]
-    )
-    
-    # Continent filter (Creative addition)
-    all_continents = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania']
-    selected_continents = st.sidebar.multiselect(
-        "🌍 Select Continents (Creative Filter)",
-        options=all_continents,
-        default=[]
-    )
-    
-    # Medal type filter
-    st.sidebar.subheader("Medal Types")
-    show_gold = st.sidebar.checkbox("🥇 Gold", value=True)
-    show_silver = st.sidebar.checkbox("🥈 Silver", value=True)
-    show_bronze = st.sidebar.checkbox("🥉 Bronze", value=True)
+# Show filter summary in sidebar
+show_filter_summary(filters, filtered_medals_total, medals_total_df)
 
-# Main title
-st.markdown('<div class="main-title">🏅 Paris 2024 Olympic Games Dashboard</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Explore comprehensive insights from the Paris 2024 Summer Olympics</div>', unsafe_allow_html=True)
 
-if medals_total is not None:
-    # Apply filters
-    filtered_medals = medals_total.copy()
+
+# ===== KPI METRICS =====
+st.header("📊 Key Performance Indicators")
+st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 20px;'>Real-time metrics that respond to your filter selections</p>", unsafe_allow_html=True)
+
+kpi_data = [
+    ("👥", "Total Athletes", calculate_total_athletes(filtered_athletes), COLORS['paris_green']),
+    ("🌍", "Total Countries", calculate_total_countries(filtered_medals_total), COLORS['secondary']),
+    ("🏃", "Total Sports", calculate_total_sports(filtered_events), COLORS['warning']),
+    ("🏅", "Total Medals", calculate_total_medals(filtered_medals_total), COLORS['gold']),
+    ("🎯", "Number of Events", calculate_total_events(filtered_events), COLORS['danger'])
+]
+
+cols = st.columns(5)
+for col, (icon, label, value, color) in zip(cols, kpi_data):
+    with col:
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, {COLORS['card_bg']} 0%, {COLORS['secondary_bg']} 100%);
+                    padding: 25px; border-radius: 15px; text-align: center;
+                    border: 2px solid {color}; transition: transform 0.3s;'>
+            <div style='font-size: 3rem; margin-bottom: 10px;'>{icon}</div>
+            <h2 style='color: {color}; margin: 10px 0; font-size: 2.5rem;'>{value:,}</h2>
+            <p style='color: {COLORS['text']}; margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;'>{label}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ===== VISUALIZATIONS =====
+st.header("📈 Key Visualizations")
+
+col_left, col_right = st.columns(2)
+
+with col_left:
+    st.subheader("🥧 Global Medal Distribution")
+    st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 15px;'>Breakdown of Gold, Silver, and Bronze medals awarded</p>", unsafe_allow_html=True)
     
-    if selected_countries:
-        filtered_medals = filtered_medals[filtered_medals['country'].isin(selected_countries)]
-    
-    if selected_continents:
-        filtered_medals['continent'] = filtered_medals['country_code'].map(continent_mapping)
-        filtered_medals = filtered_medals[filtered_medals['continent'].isin(selected_continents)]
-    
-    # Apply medal type filters
-    medal_cols = []
-    if show_gold:
-        medal_cols.append('Gold Medal')
-    if show_silver:
-        medal_cols.append('Silver Medal')
-    if show_bronze:
-        medal_cols.append('Bronze Medal')
-    
-    # KPI Metrics Section
-    st.header("📊 Key Performance Indicators")
-    
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        total_athletes = len(athletes) if athletes is not None else 0
-        st.metric(
-            label="👥 Total Athletes",
-            value=f"{total_athletes:,}"
-        )
-    
-    with col2:
-        total_countries = len(filtered_medals) if filtered_medals is not None else 0
-        st.metric(
-            label="🌍 Total Countries",
-            value=f"{total_countries}"
-        )
-    
-    with col3:
-        total_sports = len(events['sport'].unique()) if events is not None and 'sport' in events.columns else 0
-        st.metric(
-            label="🏃 Total Sports",
-            value=f"{total_sports}"
-        )
-    
-    with col4:
-        total_medals = filtered_medals[medal_cols].sum().sum() if medal_cols else 0
-        st.metric(
-            label="🏅 Total Medals",
-            value=f"{int(total_medals):,}"
-        )
-    
-    with col5:
-        total_events = len(events) if events is not None else 0
-        st.metric(
-            label="🎯 Total Events",
-            value=f"{total_events}"
-        )
-    
-    st.divider()
-    
-    # Visualizations
-    col_left, col_right = st.columns(2)
-    
-    with col_left:
-        st.subheader("🥧 Global Medal Distribution")
-        
-        if medal_cols:
-            medal_distribution = {
-                'Gold': filtered_medals['Gold Medal'].sum() if 'Gold Medal' in medal_cols else 0,
-                'Silver': filtered_medals['Silver Medal'].sum() if 'Silver Medal' in medal_cols else 0,
-                'Bronze': filtered_medals['Bronze Medal'].sum() if 'Bronze Medal' in medal_cols else 0
-            }
-            
-            medal_df = pd.DataFrame(list(medal_distribution.items()), columns=['Medal Type', 'Count'])
-            medal_df = medal_df[medal_df['Count'] > 0]
-            
-            fig_pie = px.pie(
-                medal_df,
-                values='Count',
-                names='Medal Type',
-                hole=0.4,
-                color='Medal Type',
-                color_discrete_map={'Gold': '#FFD700', 'Silver': '#C0C0C0', 'Bronze': '#CD7F32'}
-            )
-            fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    if not filtered_medals_total.empty:
+        fig_pie = create_medal_distribution_pie(filtered_medals_total)
+        if fig_pie.data:
             st.plotly_chart(fig_pie, use_container_width=True)
-        else:
-            st.info("Please select at least one medal type")
-    
-    with col_right:
-        st.subheader("🏆 Top 10 Medal Standings")
-        
-        if medal_cols:
-            filtered_medals['Total'] = filtered_medals[medal_cols].sum(axis=1)
-            top_10 = filtered_medals.nlargest(10, 'Total')
             
-            fig_bar = px.bar(
-                top_10,
-                y='country',
-                x='Total',
-                orientation='h',
-                color='Total',
-                color_continuous_scale='Blues',
-                labels={'Total': 'Total Medals', 'country': 'Country'}
-            )
-            fig_bar.update_layout(yaxis={'categoryorder': 'total ascending'})
-            st.plotly_chart(fig_bar, use_container_width=True)
+            # Medal counts below
+            medal_dist = calculate_medal_distribution(filtered_medals_total)
+            m1, m2, m3 = st.columns(3)
+            m1.metric("🥇 Gold", f"{medal_dist['Gold']:,}")
+            m2.metric("🥈 Silver", f"{medal_dist['Silver']:,}")
+            m3.metric("🥉 Bronze", f"{medal_dist['Bronze']:,}")
         else:
-            st.info("Please select at least one medal type")
-    
-    st.divider()
-    
-    # Additional insights
-    st.header("💡 Quick Insights")
-    
-    insight_col1, insight_col2, insight_col3 = st.columns(3)
-    
-    with insight_col1:
-        if not filtered_medals.empty:
-            top_country = filtered_medals.loc[filtered_medals['Total'].idxmax(), 'country']
-            st.info(f"🥇 **Leading Nation:** {top_country}")
-    
-    with insight_col2:
-        if medal_cols:
-            most_common_medal = max(medal_distribution.items(), key=lambda x: x[1])[0]
-            st.info(f"🏅 **Most Common Medal:** {most_common_medal}")
-    
-    with insight_col3:
-        avg_medals = filtered_medals['Total'].mean()
-        st.info(f"📊 **Avg Medals per Country:** {avg_medals:.1f}")
+            st.warning("No medal data available for the selected filters.")
+    else:
+        st.info("No data available. Please adjust your filters.")
 
+with col_right:
+    st.subheader("🏆 Top 10 Medal Standings")
+    st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 15px;'>Countries leading the medal race</p>", unsafe_allow_html=True)
+    
+    if not filtered_medals_total.empty:
+        fig_bar = create_top_countries_bar(filtered_medals_total, n=10)
+        if fig_bar.data:
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+            # Podium
+            top_3 = filtered_medals_total.nlargest(3, 'Total')
+            if len(top_3) >= 3:
+                country_col = 'country' if 'country' in top_3.columns else 'country_code'
+                p1, p2, p3 = st.columns(3)
+                
+                # Silver (2nd)
+                with p1:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 20px; background: {COLORS['card_bg']}; 
+                                border-radius: 15px; border: 3px solid {COLORS['silver']}; 
+                                box-shadow: 0 0 20px {COLORS['silver']}50;'>
+                        <div style='font-size: 3rem; margin-bottom: 10px;'>🥈</div>
+                        <h3 style='color: {COLORS['silver']}; margin: 10px 0; font-size: 1.3rem;'>{top_3.iloc[1][country_col]}</h3>
+                        <p style='color: {COLORS['text']}; margin: 0; font-size: 1.5rem; font-weight: bold;'>{int(top_3.iloc[1]['Total'])}</p>
+                        <p style='color: {COLORS['text_secondary']}; margin: 0; font-size: 0.9rem;'>medals</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Gold (1st)
+                with p2:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 25px; background: {COLORS['card_bg']}; 
+                                border-radius: 15px; border: 4px solid {COLORS['gold']}; 
+                                box-shadow: 0 0 30px {COLORS['gold']}80; transform: scale(1.08);'>
+                        <div style='font-size: 4rem; margin-bottom: 10px;'>🥇</div>
+                        <h3 style='color: {COLORS['gold']}; margin: 10px 0; font-size: 1.5rem;'>{top_3.iloc[0][country_col]}</h3>
+                        <p style='color: {COLORS['text']}; margin: 0; font-size: 2rem; font-weight: bold;'>{int(top_3.iloc[0]['Total'])}</p>
+                        <p style='color: {COLORS['text_secondary']}; margin: 0; font-size: 1rem;'>medals</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Bronze (3rd)
+                with p3:
+                    st.markdown(f"""
+                    <div style='text-align: center; padding: 20px; background: {COLORS['card_bg']}; 
+                                border-radius: 15px; border: 3px solid {COLORS['bronze']}; 
+                                box-shadow: 0 0 20px {COLORS['bronze']}50;'>
+                        <div style='font-size: 3rem; margin-bottom: 10px;'>🥉</div>
+                        <h3 style='color: {COLORS['bronze']}; margin: 10px 0; font-size: 1.3rem;'>{top_3.iloc[2][country_col]}</h3>
+                        <p style='color: {COLORS['text']}; margin: 0; font-size: 1.5rem; font-weight: bold;'>{int(top_3.iloc[2]['Total'])}</p>
+                        <p style='color: {COLORS['text_secondary']}; margin: 0; font-size: 0.9rem;'>medals</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.warning("Could not generate chart. Check data columns.")
+    else:
+        st.info("No data available. Please adjust your filters.")
+
+st.markdown("---")
+
+# ===== QUICK INSIGHTS =====
+st.header("💡 Quick Insights")
+
+if not filtered_medals_total.empty and 'Total' in filtered_medals_total.columns:
+    i1, i2, i3 = st.columns(3)
+    
+    with i1:
+        country_col = 'country' if 'country' in filtered_medals_total.columns else 'country_code'
+        leading = filtered_medals_total.iloc[0]
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, {COLORS['card_bg']}, {COLORS['secondary_bg']}); 
+                    padding: 25px; border-radius: 15px; border-left: 5px solid {COLORS['paris_green']}; height: 100%;'>
+            <h4 style='color: {COLORS['paris_green']}; margin: 0 0 15px 0; font-size: 1.1rem;'>🥇 Leading Nation</h4>
+            <p style='color: {COLORS['text']}; font-size: 2rem; font-weight: bold; margin: 0;'>{leading[country_col]}</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 10px 0 0 0; font-size: 1.1rem;'>{int(leading['Total'])} total medals</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 5px 0 0 0; font-size: 0.9rem;'>
+                🥇 {int(leading['Gold'])} | 🥈 {int(leading['Silver'])} | 🥉 {int(leading['Bronze'])}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with i2:
+        medal_dist = calculate_medal_distribution(filtered_medals_total)
+        most_common = max(medal_dist.items(), key=lambda x: x[1])
+        icon_map = {'Gold': '🥇', 'Silver': '🥈', 'Bronze': '🥉'}
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, {COLORS['card_bg']}, {COLORS['secondary_bg']}); 
+                    padding: 25px; border-radius: 15px; border-left: 5px solid {COLORS['secondary']}; height: 100%;'>
+            <h4 style='color: {COLORS['secondary']}; margin: 0 0 15px 0; font-size: 1.1rem;'>🏅 Most Common Medal</h4>
+            <p style='color: {COLORS['text']}; font-size: 2rem; font-weight: bold; margin: 0;'>{icon_map[most_common[0]]} {most_common[0]}</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 10px 0 0 0; font-size: 1.1rem;'>{most_common[1]:,} medals awarded</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 5px 0 0 0; font-size: 0.9rem;'>
+                {(most_common[1]/sum(medal_dist.values())*100):.1f}% of total</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with i3:
+        avg_medals = filtered_medals_total['Total'].mean()
+        median_medals = filtered_medals_total['Total'].median()
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, {COLORS['card_bg']}, {COLORS['secondary_bg']}); 
+                    padding: 25px; border-radius: 15px; border-left: 5px solid {COLORS['warning']}; height: 100%;'>
+            <h4 style='color: {COLORS['warning']}; margin: 0 0 15px 0; font-size: 1.1rem;'>📊 Average per Country</h4>
+            <p style='color: {COLORS['text']}; font-size: 2rem; font-weight: bold; margin: 0;'>{avg_medals:.1f}</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 10px 0 0 0; font-size: 1.1rem;'>medals per nation</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 5px 0 0 0; font-size: 0.9rem;'>
+                Median: {median_medals:.0f} medals</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ===== DATA TABLE =====
+st.header("📋 Detailed Medal Table")
+
+if not filtered_medals_total.empty:
+    display_df = filtered_medals_total[['country', 'country_code', 'continent', 'Gold', 'Silver', 'Bronze', 'Total']].copy() if all(c in filtered_medals_total.columns for c in ['country', 'country_code', 'continent', 'Gold', 'Silver', 'Bronze', 'Total']) else filtered_medals_total
+    
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            'country': 'Country',
+            'country_code': 'Code',
+            'continent': 'Continent',
+            'Gold': st.column_config.NumberColumn('🥇 Gold', format='%d'),
+            'Silver': st.column_config.NumberColumn('🥈 Silver', format='%d'),
+            'Bronze': st.column_config.NumberColumn('🥉 Bronze', format='%d'),
+            'Total': st.column_config.NumberColumn('🏆 Total', format='%d')
+        }
+    )
+    
+    csv = display_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Download Medal Data (CSV)",
+        data=csv,
+        file_name="paris2024_medals.csv",
+        mime="text/csv"
+    )
 else:
-    st.error("Unable to load data. Please ensure CSV files are in the correct directory.")
-    st.info("Expected files: athletes.csv, medals_total.csv, events.csv, nocs.csv, medals.csv")
+    st.info("No data to display. Please adjust your filters.")
+
+# ===== FOOTER =====
+st.markdown("---")
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"""
+<div style='padding: 15px; background: {COLORS['card_bg']}; border-radius: 8px; text-align: center;'>
+    <p style='color: {COLORS['text_secondary']}; margin: 0; font-size: 0.75rem;'>
+        Built for <strong>LA28 Volunteer Selection</strong><br>
+        ESI-SBA | Dr. Belkacem KHALDI
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div style='text-align: center; padding: 30px; background: {COLORS['card_bg']}; border-radius: 10px; margin-top: 40px;'>
+    <p style='color: {COLORS['text_secondary']}; font-size: 0.9rem;'>
+        Built for LA28 Volunteer Selection Challenge<br>
+        <strong>ESI-SBA</strong> | Instructor: Dr. Belkacem KHALDI<br>
+        Team: BENHAMMADI Lokmane AND BELKAID Abderrahmane yassine hamza
+    </p>
+</div>
+""", unsafe_allow_html=True)

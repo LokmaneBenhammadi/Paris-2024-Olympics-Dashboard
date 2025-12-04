@@ -1,7 +1,7 @@
-/* Paris 2024 Olympics Dashboard - DARK MODE with Olympic Colors */
+/* Paris 2024 Olympics Dashboard - DARK MODE with Official Paris 2024 Colors */
 
 /* ============================================================================
-   GLOBAL STYLES - Dark Theme
+   GLOBAL STYLES - Dark Theme with Paris 2024 Branding
    ============================================================================ */
 
 .stApp {
@@ -11,12 +11,12 @@
 
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1A1D24 0%, #0E1117 100%);
-    border-right: 3px solid #D4AF37;
-    box-shadow: 2px 0 20px rgba(212, 175, 55, 0.2);
+    border-right: 3px solid #C8D647;
+    box-shadow: 2px 0 20px rgba(200, 214, 71, 0.2);
 }
 
 /* ============================================================================
-   HEADER & TITLES - Gold gradient on dark
+   HEADER & TITLES - Paris 2024 Lime Green gradient on dark
    ============================================================================ */
 
 h1 {
@@ -24,18 +24,18 @@ h1 {
     font-weight: 800 !important;
     text-align: center;
     padding: 20px 0;
-    background: linear-gradient(90deg, #D4AF37 0%, #FCB131 50%, #D4AF37 100%);
+    background: linear-gradient(90deg, #C8D647 0%, #A8C520 50%, #C8D647 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: 2px;
-    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+    text-shadow: 0 0 30px rgba(200, 214, 71, 0.5);
 }
 
 h2 {
     color: #FAFAFA !important;
     font-weight: 700 !important;
-    border-left: 5px solid #D4AF37;
+    border-left: 5px solid #C8D647;
     padding-left: 15px;
 }
 
@@ -45,14 +45,14 @@ h3 {
 }
 
 /* ============================================================================
-   METRICS - Glowing gold effect
+   METRICS - Glowing Paris 2024 green effect
    ============================================================================ */
 
 [data-testid="stMetricValue"] {
     font-size: 2.5rem !important;
     font-weight: 800 !important;
-    color: #D4AF37 !important;
-    text-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+    color: #C8D647 !important;
+    text-shadow: 0 0 20px rgba(200, 214, 71, 0.6);
 }
 
 [data-testid="stMetricLabel"] {
@@ -68,11 +68,11 @@ h3 {
 }
 
 /* ============================================================================
-   BUTTONS - Glowing Olympic style
+   BUTTONS - Paris 2024 Lime Green style
    ============================================================================ */
 
 .stButton > button {
-    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    background: linear-gradient(135deg, #C8D647 0%, #A8C520 100%);
     color: #000000;
     border: none;
     border-radius: 25px;
@@ -81,23 +81,23 @@ h3 {
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.3s ease;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0 20px rgba(200, 214, 71, 0.4);
 }
 
 .stButton > button:hover {
-    background: linear-gradient(135deg, #0085C7 0%, #00A651 100%);
-    color: #FFFFFF;
+    background: linear-gradient(135deg, #A8C520 0%, #C8D647 100%);
+    color: #000000;
     transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(0, 133, 199, 0.6);
+    box-shadow: 0 0 30px rgba(200, 214, 71, 0.6);
 }
 
 /* ============================================================================
-   FILTERS - Dark with gold accents
+   FILTERS - Dark with Paris 2024 green accents
    ============================================================================ */
 
 .stSelectbox > div > div {
     border-radius: 10px;
-    border: 2px solid #D4AF37;
+    border: 2px solid #C8D647;
     background-color: #262730;
     color: #FAFAFA;
 }
@@ -110,14 +110,14 @@ h3 {
 }
 
 .stSlider > div > div > div {
-    background: linear-gradient(90deg, #D4AF37 0%, #FCB131 100%) !important;
+    background: linear-gradient(90deg, #C8D647 0%, #A8C520 100%) !important;
 }
 
 /* Input fields */
 input {
     background-color: #262730 !important;
     color: #FAFAFA !important;
-    border: 2px solid #D4AF37 !important;
+    border: 2px solid #C8D647 !important;
 }
 
 /* ============================================================================
@@ -126,8 +126,8 @@ input {
 
 [data-testid="stDataFrame"] {
     border-radius: 12px;
-    border: 2px solid #D4AF37;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    border: 2px solid #C8D647;
+    box-shadow: 0 0 20px rgba(200, 214, 71, 0.2);
     background-color: #262730;
 }
 
@@ -137,20 +137,20 @@ input {
 
 [data-testid="stPlotlyChart"] {
     border-radius: 15px;
-    box-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 0 30px rgba(200, 214, 71, 0.15);
     padding: 20px;
     background-color: #1A1D24;
-    border: 1px solid #D4AF37;
+    border: 1px solid #C8D647;
     transition: all 0.3s ease;
 }
 
 [data-testid="stPlotlyChart"]:hover {
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
-    border-color: #FCB131;
+    box-shadow: 0 0 40px rgba(200, 214, 71, 0.3);
+    border-color: #A8C520;
 }
 
 /* ============================================================================
-   TABS - Olympic rings inspired
+   TABS - Olympic rings inspired with Paris 2024 accent
    ============================================================================ */
 
 .stTabs [data-baseweb="tab-list"] {
@@ -168,14 +168,14 @@ input {
 }
 
 .stTabs [aria-selected="true"] {
-    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    background: linear-gradient(135deg, #C8D647 0%, #A8C520 100%);
     color: #000000 !important;
-    border-color: #D4AF37;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    border-color: #C8D647;
+    box-shadow: 0 0 20px rgba(200, 214, 71, 0.4);
 }
 
 /* ============================================================================
-   EXPANDERS - Gold glow effect
+   EXPANDERS - Paris 2024 glow effect
    ============================================================================ */
 
 .streamlit-expanderHeader {
@@ -183,14 +183,14 @@ input {
     border-radius: 10px;
     font-weight: 600;
     color: #FAFAFA;
-    border-left: 4px solid #D4AF37;
+    border-left: 4px solid #C8D647;
     padding-left: 15px;
 }
 
 .streamlit-expanderHeader:hover {
-    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    background: linear-gradient(135deg, #C8D647 0%, #A8C520 100%);
     color: #000000;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 20px rgba(200, 214, 71, 0.3);
 }
 
 /* ============================================================================
@@ -203,9 +203,9 @@ input {
 }
 
 [data-testid="stSidebar"] h3 {
-    color: #D4AF37 !important;
+    color: #C8D647 !important;
     font-weight: 700 !important;
-    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    text-shadow: 0 0 10px rgba(200, 214, 71, 0.3);
 }
 
 /* ============================================================================
@@ -214,14 +214,14 @@ input {
 
 .stAlert {
     border-radius: 10px;
-    border-left: 5px solid #D4AF37;
+    border-left: 5px solid #C8D647;
     background-color: #262730;
     color: #FAFAFA;
 }
 
 div[data-baseweb="notification"] {
     background-color: #262730;
-    border-left: 5px solid #D4AF37;
+    border-left: 5px solid #C8D647;
 }
 
 /* Success boxes */
@@ -238,8 +238,8 @@ div[data-baseweb="notification"] {
 
 /* Warning boxes */
 .stWarning {
-    background-color: rgba(252, 191, 73, 0.1);
-    border-left-color: #FCBF49;
+    background-color: rgba(200, 214, 71, 0.1);
+    border-left-color: #C8D647;
 }
 
 /* Error boxes */
@@ -261,7 +261,7 @@ footer {
     padding: 30px;
     color: #B0B0B0;
     font-size: 0.9rem;
-    border-top: 3px solid #D4AF37;
+    border-top: 3px solid #C8D647;
     margin-top: 50px;
     background-color: #1A1D24;
 }
@@ -282,12 +282,12 @@ label {
    ANIMATIONS - Glowing effects
    ============================================================================ */
 
-@keyframes goldGlow {
+@keyframes greenGlow {
     0%, 100% { 
-        box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 0 20px rgba(200, 214, 71, 0.3);
     }
     50% { 
-        box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+        box-shadow: 0 0 40px rgba(200, 214, 71, 0.6);
     }
 }
 
@@ -307,7 +307,7 @@ label {
 }
 
 /* ============================================================================
-   SCROLLBAR - Dark with gold accent
+   SCROLLBAR - Dark with Paris 2024 green accent
    ============================================================================ */
 
 ::-webkit-scrollbar {
@@ -320,12 +320,12 @@ label {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #D4AF37 0%, #FCB131 100%);
+    background: linear-gradient(135deg, #C8D647 0%, #A8C520 100%);
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #FCB131 0%, #D4AF37 100%);
+    background: linear-gradient(135deg, #A8C520 0%, #C8D647 100%);
 }
 
 /* ============================================================================
@@ -348,10 +348,29 @@ label {
 }
 
 /* ============================================================================
-   SPECIAL EFFECTS - Olympic Flame Glow
+   SPECIAL EFFECTS - Paris 2024 Flame Glow
    ============================================================================ */
 
-.metric-card-gold {
-    box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-    animation: goldGlow 3s ease-in-out infinite;
+.metric-card-green {
+    box-shadow: 0 0 30px rgba(200, 214, 71, 0.3);
+    animation: greenGlow 3s ease-in-out infinite;
+}
+
+/* ============================================================================
+   MEDAL COLORS - Keep traditional gold/silver/bronze
+   ============================================================================ */
+
+.medal-gold {
+    color: #FFD700 !important;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.medal-silver {
+    color: #C0C0C0 !important;
+    text-shadow: 0 0 10px rgba(192, 192, 192, 0.5);
+}
+
+.medal-bronze {
+    color: #CD7F32 !important;
+    text-shadow: 0 0 10px rgba(205, 127, 50, 0.5);
 }
