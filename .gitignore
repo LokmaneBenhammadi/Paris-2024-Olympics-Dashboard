@@ -34,7 +34,6 @@ Thumbs.db
 
 # Jupyter Notebook
 .ipynb_checkpoints/
-*.ipynb
 
 # Data (optional - uncomment if data is too large)
 # data/*.csv
