@@ -10,8 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 from config.config import COLORS, PAGE_CONFIG
-from utils.data_loader import load_athletes, load_medallists, load_medals_total
-from utils.filters import create_sidebar_filters, apply_filters, show_filter_summary
+from utils.data_loader import load_athletes, load_medallists, load_medals_total, load_medals
 from utils.continent_mapper import add_continent_column
 
 # Page configuration
@@ -45,6 +44,7 @@ def load_comparison_data():
     """Load and prepare data for country comparison."""
     athletes_df = load_athletes()
     medallists_df = load_medallists()
+    medals_df = load_medals()  # Use medals.csv for accurate medal counts (one row per medal event)
     medals_total_df = load_medals_total()
     
     # Calculate age if needed
@@ -60,39 +60,36 @@ def load_comparison_data():
     if not medallists_df.empty and 'country_code' in medallists_df.columns:
         medallists_df = add_continent_column(medallists_df, 'country_code')
     
-    # Parse medal dates
-    if not medallists_df.empty and 'medal_date' in medallists_df.columns:
-        medallists_df['medal_date'] = pd.to_datetime(medallists_df['medal_date'], errors='coerce')
+    if not medals_df.empty and 'country_code' in medals_df.columns:
+        medals_df = add_continent_column(medals_df, 'country_code')
     
-    return athletes_df, medallists_df, medals_total_df
+    # Parse medal dates
+    if not medals_df.empty and 'medal_date' in medals_df.columns:
+        medals_df['medal_date'] = pd.to_datetime(medals_df['medal_date'], errors='coerce')
+    
+    return athletes_df, medallists_df, medals_df, medals_total_df
 
-athletes_df, medallists_df, medals_total_df = load_comparison_data()
-
-# ===== FILTERS =====
-filters = create_sidebar_filters(athletes_df, medallists_df, None)
-
-# Apply filters
-filtered_athletes = apply_filters(athletes_df, filters) if not athletes_df.empty else athletes_df
-filtered_medallists = apply_filters(medallists_df, filters) if not medallists_df.empty else medallists_df
-
-# Show filter summary
-show_filter_summary(filters, filtered_medallists, medallists_df)
+athletes_df, medallists_df, medals_df, medals_total_df = load_comparison_data()
 
 st.markdown(f"""
 <div style='background: {COLORS['card_bg']}; padding: 20px; border-radius: 10px; border-left: 5px solid {COLORS['paris_green']}; margin-bottom: 30px;'>
     <p style='color: {COLORS['text']}; font-size: 1.1rem; margin: 0;'>
         <strong>⚔️ Head-to-Head Comparison:</strong> Select two countries below to compare their Olympic performance.
-        Use the <strong>sidebar filters</strong> to refine the comparison data.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
+# Use full datasets (no sidebar filters)
+filtered_athletes = athletes_df
+filtered_medallists = medallists_df
+
 # ===== COUNTRY SELECTOR =====
 st.header("🎯 Select Countries to Compare")
 
-if not filtered_medallists.empty:
-    # Get list of countries
-    countries = sorted(filtered_medallists['country'].dropna().unique())
+# Use base data
+if not medals_df.empty:
+    # Get list of countries from medals_df (more accurate for countries that won medals)
+    countries = sorted(medals_df['country'].dropna().unique())
     
     col_select1, col_select2 = st.columns(2)
     
@@ -117,11 +114,16 @@ if not filtered_medallists.empty:
             st.warning("⚠️ Please select two different countries to compare.")
         else:
             # Filter data for both countries
-            country1_medallists = filtered_medallists[filtered_medallists['country'] == country1]
-            country2_medallists = filtered_medallists[filtered_medallists['country'] == country2]
+            # Use medals_df for accurate medal counts (one row per medal event, not per athlete)
+            country1_medals = medals_df[medals_df['country'] == country1]
+            country2_medals = medals_df[medals_df['country'] == country2]
             
-            country1_athletes = filtered_athletes[filtered_athletes['country'] == country1]
-            country2_athletes = filtered_athletes[filtered_athletes['country'] == country2]
+            # Keep medallists_df for individual athlete analysis (gender, age)
+            country1_medallists = medallists_df[medallists_df['country'] == country1]
+            country2_medallists = medallists_df[medallists_df['country'] == country2]
+            
+            country1_athletes = athletes_df[athletes_df['country'] == country1]
+            country2_athletes = athletes_df[athletes_df['country'] == country2]
             
             st.markdown("---")
             
@@ -133,10 +135,11 @@ if not filtered_medallists.empty:
             with col_over1:
                 st.markdown(f"<h3 style='text-align: center; color: {COLORS['paris_green']};'>{country1}</h3>", unsafe_allow_html=True)
                 
-                total_medals_c1 = len(country1_medallists)
-                gold_c1 = len(country1_medallists[country1_medallists['medal_type'].str.contains('Gold', case=False, na=False)])
-                silver_c1 = len(country1_medallists[country1_medallists['medal_type'].str.contains('Silver', case=False, na=False)])
-                bronze_c1 = len(country1_medallists[country1_medallists['medal_type'].str.contains('Bronze', case=False, na=False)])
+                # Use medals_df for accurate counts (one medal per event, not per athlete)
+                total_medals_c1 = len(country1_medals)
+                gold_c1 = len(country1_medals[country1_medals['medal_type'].str.contains('Gold', case=False, na=False)])
+                silver_c1 = len(country1_medals[country1_medals['medal_type'].str.contains('Silver', case=False, na=False)])
+                bronze_c1 = len(country1_medals[country1_medals['medal_type'].str.contains('Bronze', case=False, na=False)])
                 athletes_c1 = len(country1_athletes)
                 
                 st.markdown(f"""
@@ -165,10 +168,11 @@ if not filtered_medallists.empty:
             with col_over2:
                 st.markdown(f"<h3 style='text-align: center; color: {COLORS['secondary']};'>{country2}</h3>", unsafe_allow_html=True)
                 
-                total_medals_c2 = len(country2_medallists)
-                gold_c2 = len(country2_medallists[country2_medallists['medal_type'].str.contains('Gold', case=False, na=False)])
-                silver_c2 = len(country2_medallists[country2_medallists['medal_type'].str.contains('Silver', case=False, na=False)])
-                bronze_c2 = len(country2_medallists[country2_medallists['medal_type'].str.contains('Bronze', case=False, na=False)])
+                # Use medals_df for accurate counts (one medal per event, not per athlete)
+                total_medals_c2 = len(country2_medals)
+                gold_c2 = len(country2_medals[country2_medals['medal_type'].str.contains('Gold', case=False, na=False)])
+                silver_c2 = len(country2_medals[country2_medals['medal_type'].str.contains('Silver', case=False, na=False)])
+                bronze_c2 = len(country2_medals[country2_medals['medal_type'].str.contains('Bronze', case=False, na=False)])
                 athletes_c2 = len(country2_athletes)
                 
                 st.markdown(f"""
@@ -255,9 +259,9 @@ if not filtered_medallists.empty:
             # ===== 3. PERFORMANCE BY SPORT (RADAR CHART) =====
             st.header("🎯 Performance Across Sports")
             
-            # Get medals by sport for both countries
-            c1_sports = country1_medallists.groupby('discipline').size().reset_index(name='medals')
-            c2_sports = country2_medallists.groupby('discipline').size().reset_index(name='medals')
+            # Get medals by sport for both countries (use medals_df for accurate counts)
+            c1_sports = country1_medals.groupby('discipline').size().reset_index(name='medals')
+            c2_sports = country2_medals.groupby('discipline').size().reset_index(name='medals')
             
             # Find common sports
             common_sports = set(c1_sports['discipline']).intersection(set(c2_sports['discipline']))
@@ -328,13 +332,13 @@ if not filtered_medallists.empty:
             # ===== 4. MEDAL ACCUMULATION OVER TIME =====
             st.header("📈 Medal Accumulation Timeline")
             
-            if 'medal_date' in country1_medallists.columns and 'medal_date' in country2_medallists.columns:
-                # Calculate cumulative medals
-                c1_timeline = country1_medallists.groupby('medal_date').size().reset_index(name='daily_medals')
+            if 'medal_date' in country1_medals.columns and 'medal_date' in country2_medals.columns:
+                # Calculate cumulative medals (use medals_df for accurate timeline)
+                c1_timeline = country1_medals.groupby('medal_date').size().reset_index(name='daily_medals')
                 c1_timeline = c1_timeline.sort_values('medal_date')
                 c1_timeline['cumulative'] = c1_timeline['daily_medals'].cumsum()
                 
-                c2_timeline = country2_medallists.groupby('medal_date').size().reset_index(name='daily_medals')
+                c2_timeline = country2_medals.groupby('medal_date').size().reset_index(name='daily_medals')
                 c2_timeline = c2_timeline.sort_values('medal_date')
                 c2_timeline['cumulative'] = c2_timeline['daily_medals'].cumsum()
                 
@@ -524,7 +528,7 @@ if not filtered_medallists.empty:
             
             if scenario_type == "Exclude Sports":
                 # Get all sports
-                all_sports = sorted(filtered_medallists['discipline'].dropna().unique())
+                all_sports = sorted(medals_df['discipline'].dropna().unique())
                 
                 excluded_sports = st.multiselect(
                     "🚫 Exclude these sports from rankings:",
@@ -534,8 +538,8 @@ if not filtered_medallists.empty:
                 )
                 
                 if excluded_sports:
-                    # Recalculate medals without excluded sports
-                    scenario_data = filtered_medallists[~filtered_medallists['discipline'].isin(excluded_sports)]
+                    # Recalculate medals without excluded sports (use medals_df for accurate counts)
+                    scenario_data = medals_df[~medals_df['discipline'].isin(excluded_sports)]
                     
                     c1_scenario = scenario_data[scenario_data['country'] == country1]
                     c2_scenario = scenario_data[scenario_data['country'] == country2]
@@ -644,7 +648,7 @@ if not filtered_medallists.empty:
                 # Show top 10 by gold
                 st.subheader("🥇 Top 10 Countries by Gold Medals")
                 
-                gold_only = filtered_medallists[filtered_medallists['medal_type'].str.contains('Gold', case=False, na=False)]
+                gold_only = medals_df[medals_df['medal_type'].str.contains('Gold', case=False, na=False)]
                 gold_rankings = gold_only.groupby('country').size().reset_index(name='gold_medals')
                 gold_rankings = gold_rankings.sort_values('gold_medals', ascending=False).head(10)
                 
@@ -681,7 +685,11 @@ if not filtered_medallists.empty:
             else:  # Gender-Specific
                 selected_gender = st.radio("Select Gender:", ["Male", "Female"], horizontal=True)
                 
-                gender_data = filtered_medallists[filtered_medallists['gender'] == selected_gender]
+                # Use medals_df for accurate counts (one medal per event)
+                # Map gender values: medals.csv uses 'M'/'W', medallists uses 'Male'/'Female'
+                gender_map = {'Male': 'M', 'Female': 'W'}
+                gender_code = gender_map.get(selected_gender, selected_gender)
+                gender_data = medals_df[medals_df['gender'] == gender_code]
                 
                 c1_gender = gender_data[gender_data['country'] == country1]
                 c2_gender = gender_data[gender_data['country'] == country2]

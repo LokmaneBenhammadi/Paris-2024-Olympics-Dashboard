@@ -12,6 +12,7 @@ pydeck>=0.8.0
 # Utilities
 python-dateutil>=2.8.2
 pytz>=2023.3
+streamlit-plotly-events>=0.0.6
 
 # Optional: For better performance
 openpyxl>=3.1.0

@@ -177,22 +177,75 @@ if not filtered_athletes.empty and 'name' in filtered_athletes.columns:
             
             # Extract athlete name from selection
             athlete_name = selected_athlete_display.split(" (")[0]
-            athlete_data = filtered_athletes[filtered_athletes['name'] == athlete_name].iloc[0]
+            athlete_row = filtered_athletes[filtered_athletes['name'] == athlete_name]
+            
+            if athlete_row.empty:
+                st.error("Athlete data not found.")
+                st.stop()
+            
+            athlete_data = athlete_row.iloc[0]
             
             # Display athlete profile card
             col1, col2, col3 = st.columns([1, 2, 2])
             
             with col1:
-                # Profile image with gender-based placeholder
+                # Profile image - use image_url from CSV if available, otherwise use default placeholder
                 image_displayed = False
                 
-                if 'url' in athlete_data and pd.notna(athlete_data['url']) and str(athlete_data['url']).strip():
+                # Get image_url from athlete data - try multiple access methods
+                image_url = None
+                
+                # Method 1: Check if column exists and access from DataFrame row directly
+                if 'image_url' in filtered_athletes.columns:
                     try:
-                        st.image(athlete_data['url'], width=200)
-                        image_displayed = True
-                    except:
+                        # Access directly from the filtered row (before converting to Series)
+                        img_val = athlete_row['image_url'].iloc[0] if len(athlete_row) > 0 else None
+                        if img_val is not None and pd.notna(img_val):
+                            img_str = str(img_val).strip()
+                            if img_str and img_str.lower() not in ['nan', 'none', '', 'null']:
+                                image_url = img_str
+                    except (KeyError, IndexError, AttributeError):
                         pass
                 
+                # Method 2: If Method 1 failed, try accessing from Series
+                if not image_url and 'image_url' in athlete_data.index:
+                    try:
+                        img_val = athlete_data['image_url']
+                        if img_val is not None and pd.notna(img_val):
+                            img_str = str(img_val).strip()
+                            if img_str and img_str.lower() not in ['nan', 'none', '', 'null']:
+                                image_url = img_str
+                    except (KeyError, AttributeError, IndexError):
+                        pass
+                
+                # Try to display the image if URL is valid
+                if image_url:
+                    # Clean the URL
+                    image_url = image_url.strip()
+                    
+                    # Ensure URL starts with http/https
+                    if not image_url.startswith(('http://', 'https://')):
+                        if image_url.startswith('//'):
+                            image_url = 'https:' + image_url
+                        elif image_url.startswith('/'):
+                            image_url = 'https://img.olympics.com' + image_url
+                    
+                    # Try st.image first
+                    try:
+                        st.image(image_url, width=200, use_container_width=False)
+                        image_displayed = True
+                    except Exception:
+                        # If st.image fails, try HTML img tag as fallback
+                        try:
+                            st.markdown(
+                                f'<img src="{image_url}" width="200" style="border-radius: 10px; object-fit: cover;" onerror="this.style.display=\'none\'">',
+                                unsafe_allow_html=True
+                            )
+                            image_displayed = True
+                        except Exception:
+                            image_displayed = False
+                
+                # Fallback to default placeholder if no image_url or if image failed to load
                 if not image_displayed:
                     gender = str(athlete_data.get('gender', '')).strip().lower()
                     female_placeholder = Path("assets/female_placeholder.png")

@@ -9,7 +9,7 @@ from utils.continent_mapper import get_all_continents, add_continent_column
 from config.config import MEDAL_TYPES
 
 
-def create_sidebar_filters(athletes_df=None, medals_df=None, events_df=None):
+def create_sidebar_filters(athletes_df=None, medals_df=None, events_df=None, show_sport=True):
     """
     Create global sidebar filters for the dashboard.
     
@@ -21,6 +21,8 @@ def create_sidebar_filters(athletes_df=None, medals_df=None, events_df=None):
         Medals data (optional, for dynamic filter options)
     events_df : pandas.DataFrame
         Events data (optional, for dynamic filter options)
+    show_sport : bool
+        Whether to render the sport selector (default: True)
     
     Returns:
     --------
@@ -96,33 +98,12 @@ def create_sidebar_filters(athletes_df=None, medals_df=None, events_df=None):
     else:
         filters['countries'] = ["All"]
     
-    # Sport filter
-    st.sidebar.subheader("🏅 Sport")
-    if events_df is not None and not events_df.empty:
-        sport_col = 'sport' if 'sport' in events_df.columns else 'Sport'
-        sports = sorted(events_df[sport_col].dropna().unique())
-        sports_raw = st.sidebar.multiselect(
-            "Select Sports",
-            options=["All"] + list(sports),
-            default=["All"],
-            help="Filter by sport",
-            key=f'sport_filter{key_suffix}'
-        )
-        
-        # Auto-remove "All" when specific selection is made
-        if "All" in sports_raw and len(sports_raw) > 1:
-            sports_raw = [s for s in sports_raw if s != "All"]
-        
-        # If nothing selected, default to "All"
-        if not sports_raw:
-            sports_raw = ["All"]
-        
-        filters['sports'] = sports_raw
-    elif medals_df is not None and not medals_df.empty:
-        sport_cols = ['sport', 'Sport', 'discipline', 'Discipline']
-        sport_col = next((col for col in sport_cols if col in medals_df.columns), None)
-        if sport_col:
-            sports = sorted(medals_df[sport_col].dropna().unique())
+    # Sport filter (optional)
+    if show_sport:
+        st.sidebar.subheader("🏅 Sport")
+        if events_df is not None and not events_df.empty:
+            sport_col = 'sport' if 'sport' in events_df.columns else 'Sport'
+            sports = sorted(events_df[sport_col].dropna().unique())
             sports_raw = st.sidebar.multiselect(
                 "Select Sports",
                 options=["All"] + list(sports),
@@ -140,6 +121,30 @@ def create_sidebar_filters(athletes_df=None, medals_df=None, events_df=None):
                 sports_raw = ["All"]
             
             filters['sports'] = sports_raw
+        elif medals_df is not None and not medals_df.empty:
+            sport_cols = ['sport', 'Sport', 'discipline', 'Discipline']
+            sport_col = next((col for col in sport_cols if col in medals_df.columns), None)
+            if sport_col:
+                sports = sorted(medals_df[sport_col].dropna().unique())
+                sports_raw = st.sidebar.multiselect(
+                    "Select Sports",
+                    options=["All"] + list(sports),
+                    default=["All"],
+                    help="Filter by sport",
+                    key=f'sport_filter{key_suffix}'
+                )
+                
+                # Auto-remove "All" when specific selection is made
+                if "All" in sports_raw and len(sports_raw) > 1:
+                    sports_raw = [s for s in sports_raw if s != "All"]
+                
+                # If nothing selected, default to "All"
+                if not sports_raw:
+                    sports_raw = ["All"]
+                
+                filters['sports'] = sports_raw
+            else:
+                filters['sports'] = ["All"]
         else:
             filters['sports'] = ["All"]
     else:

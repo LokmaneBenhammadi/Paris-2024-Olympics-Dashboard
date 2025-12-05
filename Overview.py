@@ -7,7 +7,7 @@ import streamlit as st
 from pathlib import Path
 import pandas as pd
 from config.config import COLORS, PAGE_CONFIG, MEDAL_COLORS
-from utils.data_loader import load_athletes, load_medals_total, load_nocs, load_events, load_medals
+from utils.data_loader import load_athletes, load_medals_total, load_nocs, load_events, load_medals, load_medallists, load_all_sport_results
 from utils.data_processor import add_continent_to_dataframe, normalize_medal_columns
 from utils.filters import create_sidebar_filters, apply_filters, show_filter_summary
 from utils.metrics import (
@@ -31,7 +31,7 @@ logo_path = Path("assets/logo.png")
 if logo_path.exists():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image(str(logo_path), use_container_width=True)
+        st.image(str(logo_path))
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown(f"""
@@ -65,18 +65,105 @@ def load_all_overview_data():
     nocs_df = load_nocs()
     events_df = load_events()
     medals_df = load_medals()
+    medallists_df = load_medallists()
+    all_results = load_all_sport_results()
     
     # Normalize and add continent info
     if not medals_total_df.empty:
         medals_total_df = normalize_medal_columns(medals_total_df)
         medals_total_df = add_continent_to_dataframe(medals_total_df)
     
-    return athletes_df, medals_total_df, nocs_df, events_df, medals_df
+    # Add continent to medallists for filtering
+    if not medallists_df.empty:
+        from utils.continent_mapper import add_continent_column
+        medallists_df = add_continent_column(medallists_df, 'country_code')
+    
+    return athletes_df, medals_total_df, nocs_df, events_df, medals_df, medallists_df, all_results
 
-athletes_df, medals_total_df, nocs_df, events_df, medals_df = load_all_overview_data()
+athletes_df, medals_total_df, nocs_df, events_df, medals_df, medallists_df, all_results = load_all_overview_data()
+
+# Helper function to normalize sport names (same as Follow Your Country)
+def normalize_sport_name(name: str) -> str:
+    return str(name).strip().lower() if name is not None else ""
+
+# Function to calculate total sports based on actual participation (same logic as Follow Your Country)
+def calculate_total_sports_with_participation(medallists_df, all_results, filters=None):
+    """
+    Calculate total sports based on actual participation in medallists and results files.
+    This matches the logic used in Follow Your Country page.
+    """
+    sports_from_medals = set()
+    sports_from_results = set()
+    
+    # Get filtered countries from filters
+    country_codes_to_check = None
+    if filters:
+        if 'countries' in filters and "All" not in filters.get('countries', ["All"]):
+            # Filters use country names, need to convert to codes for results files
+            if not medallists_df.empty:
+                country_codes_to_check = set()
+                for country_name in filters['countries']:
+                    # Try to find matching country codes
+                    matching = medallists_df[medallists_df['country'] == country_name]
+                    if not matching.empty:
+                        country_codes_to_check.update(matching['country_code'].dropna().unique())
+                    else:
+                        # If not found, assume it's already a code
+                        country_codes_to_check.add(country_name)
+        elif 'continents' in filters and "All" not in filters.get('continents', ["All"]):
+            # Get country codes from continents
+            from utils.continent_mapper import get_countries_by_continent
+            country_codes_to_check = set()
+            for continent in filters['continents']:
+                country_codes_to_check.update(get_countries_by_continent(continent))
+    
+    # Get sports from medallists (respecting filters)
+    if not medallists_df.empty and "discipline" in medallists_df.columns:
+        filtered_medallists = medallists_df.copy()
+        
+        # Apply filters if provided
+        if filters:
+            # Apply continent filter
+            if 'continents' in filters and "All" not in filters.get('continents', ["All"]):
+                if 'continent' not in filtered_medallists.columns:
+                    from utils.continent_mapper import add_continent_column
+                    filtered_medallists = add_continent_column(filtered_medallists, 'country_code')
+                if 'continent' in filtered_medallists.columns:
+                    filtered_medallists = filtered_medallists[filtered_medallists['continent'].isin(filters['continents'])]
+            
+            # Apply country filter
+            if 'countries' in filters and "All" not in filters.get('countries', ["All"]):
+                country_col = 'country' if 'country' in filtered_medallists.columns else 'country_code'
+                if country_col in filtered_medallists.columns:
+                    filtered_medallists = filtered_medallists[filtered_medallists[country_col].isin(filters['countries'])]
+            
+            # Apply gender filter
+            if 'gender' in filters and filters.get('gender') != "All":
+                gender_col = 'gender' if 'gender' in filtered_medallists.columns else None
+                if gender_col:
+                    filtered_medallists = filtered_medallists[filtered_medallists[gender_col].str.strip().str.title() == filters['gender']]
+        
+        sports_from_medals = set(filtered_medallists["discipline"].dropna().unique())
+    
+    # Get sports from results files (respecting filters)
+    if all_results:
+        # Check each sport's results file
+        for sport_key, df in all_results.items():
+            if not df.empty and "participant_country_code" in df.columns:
+                if country_codes_to_check:
+                    # Check if any filtered country participated
+                    if df["participant_country_code"].isin(country_codes_to_check).any():
+                        sports_from_results.add(sport_key)
+                else:
+                    # No country filter, include all sports with results
+                    sports_from_results.add(sport_key)
+    
+    # Combine and normalize (same as Follow Your Country)
+    all_sports = {normalize_sport_name(s) for s in sports_from_medals} | {normalize_sport_name(s) for s in sports_from_results}
+    return len(all_sports)
 
 # ===== FILTERS =====
-filters = create_sidebar_filters(athletes_df, medals_total_df, events_df)
+filters = create_sidebar_filters(athletes_df, medals_total_df, events_df, show_sport=False)
 
 filtered_athletes = apply_filters(athletes_df, filters) if not athletes_df.empty else athletes_df
 filtered_medals_total = apply_filters(medals_total_df, filters) if not medals_total_df.empty else medals_total_df
@@ -94,7 +181,7 @@ st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 20px;'
 kpi_data = [
     ("👥", "Total Athletes", calculate_total_athletes(filtered_athletes), COLORS['paris_green']),
     ("🌍", "Total Countries", calculate_total_countries(filtered_medals_total), COLORS['secondary']),
-    ("🏃", "Total Sports", calculate_total_sports(filtered_events), COLORS['warning']),
+    ("🏃", "Total Sports", calculate_total_sports_with_participation(medallists_df, all_results, filters), COLORS['warning']),
     ("🏅", "Total Medals", calculate_total_medals(filtered_medals_total), COLORS['gold']),
     ("🎯", "Number of Events", calculate_total_events(filtered_events), COLORS['danger'])
 ]
