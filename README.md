@@ -83,33 +83,6 @@ streamlit_project/
 
 ---
 
-## 🚀 Quick Start
-
-### Option 1: Docker (Recommended)
-
-```bash
-# Clone repository
-git clone https://github.com/LokmaneBenhammadi/Paris-2024-Olympics-Dashboard.git
-cd Paris-2024-Olympics-Dashboard
-
-# Run with Docker Compose
-docker-compose up --build
-
-# Access at http://localhost:8501
-```
-
-### Option 2: Local Python
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run app
-streamlit run Overview.py
-```
-
----
-
 ## 📄 Pages Description
 
 ### 🏠 **Page 1: Overview - The Command Center**
