@@ -9,9 +9,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from config.config import COLORS, PAGE_CONFIG, MEDAL_COLORS
-from utils.data_loader import load_medals_total, load_medals, load_nocs
-from utils.data_processor import normalize_medal_columns, add_continent_to_dataframe
-from utils.continent_mapper import CONTINENT_MAP
+from utils.data_loader import load_medals, load_nocs
+from utils.filters import create_sidebar_filters, apply_filters
+from utils.continent_mapper import add_continent_column
 
 # Page configuration
 st.set_page_config(
@@ -42,124 +42,60 @@ st.markdown(f"""
 @st.cache_data
 def load_global_data():
     """Load and prepare data for global analysis."""
-    medals_total_df = load_medals_total()
     medals_df = load_medals()
     nocs_df = load_nocs()
     
-    # Normalize and add continent info for medals_total
-    if not medals_total_df.empty:
-        medals_total_df = normalize_medal_columns(medals_total_df)
-        medals_total_df = add_continent_to_dataframe(medals_total_df)
+    # Add continent info for medals
+    if not medals_df.empty and 'country_code' in medals_df.columns:
+        medals_df = add_continent_column(medals_df, 'country_code')
     
-    # Add continent info for medals (don't normalize - different structure)
-    if not medals_df.empty:
-        from utils.continent_mapper import add_continent_column
-        if 'country_code' in medals_df.columns:
-            medals_df = add_continent_column(medals_df, 'country_code')
-    
-    return medals_total_df, medals_df, nocs_df
+    return medals_df, nocs_df
 
-medals_total_df, medals_df, nocs_df = load_global_data()
+medals_df, nocs_df = load_global_data()
 
 # ===== SIDEBAR FILTERS =====
+filters = create_sidebar_filters(
+    medals_df=medals_df,
+    show_sport=False  # Sport filtering done in other pages
+)
 
-st.sidebar.header("🎯 Filters")
+# Apply filters to medals data
+filtered_medals = apply_filters(medals_df, filters)
 
-# Ensure continent column exists
-if 'continent' not in medals_total_df.columns:
-    from utils.continent_mapper import add_continent_column
-    medals_total_df = add_continent_column(medals_total_df, 'country_code')
+# Calculate aggregated totals from filtered individual medals (medals.csv)
+if not filtered_medals.empty:
+    # Group by country to get totals
+    medals_by_country = filtered_medals.groupby(['country_code', 'country', 'continent']).agg(
+        Gold=('medal_type', lambda x: (x == 'Gold Medal').sum()),
+        Silver=('medal_type', lambda x: (x == 'Silver Medal').sum()),
+        Bronze=('medal_type', lambda x: (x == 'Bronze Medal').sum())
+    ).reset_index()
     
-# Continent filter (first)
-if 'continent' in medals_total_df.columns:
-    all_continents = sorted(medals_total_df['continent'].dropna().unique())
-    selected_continents_raw = st.sidebar.multiselect(
-        "🗺️ Select Continents",
-        options=["All"] + all_continents,
-        default=["All"],
-        help="Filter by continents (select continent first, then country)"
-    )
+    # Calculate display total based on selected medal types
+    medals_by_country['Display_Total'] = 0
+    if 'Gold' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze']):
+        medals_by_country['Display_Total'] += medals_by_country['Gold']
+    if 'Silver' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze']):
+        medals_by_country['Display_Total'] += medals_by_country['Silver']
+    if 'Bronze' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze']):
+        medals_by_country['Display_Total'] += medals_by_country['Bronze']
     
-    # Handle "All" selection
-    if "All" in selected_continents_raw:
-        selected_continents = all_continents
-    else:
-        selected_continents = selected_continents_raw
+    # Remove countries with 0 medals after filtering
+    medals_by_country = medals_by_country[medals_by_country['Display_Total'] > 0]
+    medals_by_country['Total'] = medals_by_country['Gold'] + medals_by_country['Silver'] + medals_by_country['Bronze']
 else:
-    selected_continents = []
-    selected_continents_raw = []
-
-# Country filter (filtered by selected continents)
-if not medals_total_df.empty:
-    # Filter countries based on selected continents
-    if selected_continents and 'continent' in medals_total_df.columns:
-        available_countries_df = medals_total_df[medals_total_df['continent'].isin(selected_continents)]
-        all_countries = sorted(available_countries_df['country'].dropna().unique())
-    else:
-        all_countries = sorted(medals_total_df['country'].dropna().unique())
-    
-    selected_countries_raw = st.sidebar.multiselect(
-        "🌍 Select Countries",
-        options=["All"] + all_countries,
-        default=["All"],
-        help="Filter by specific countries (filtered by continent selection)"
-    )
-    
-    # Handle "All" selection
-    if "All" in selected_countries_raw:
-        selected_countries = all_countries
-    else:
-        selected_countries = selected_countries_raw
-    
-    # Medal type filter
-    st.sidebar.subheader("🏅 Medal Types")
-    show_gold = st.sidebar.checkbox("🥇 Gold", value=True)
-    show_silver = st.sidebar.checkbox("🥈 Silver", value=True)
-    show_bronze = st.sidebar.checkbox("🥉 Bronze", value=True)
-
-# Apply filters
-filtered_medals_total = medals_total_df.copy()
-filtered_medals = medals_df.copy()
-
-# Ensure continent column exists in filtered_medals before filtering by continent
-if 'continent' not in filtered_medals.columns:
-    from utils.continent_mapper import add_continent_column
-    filtered_medals = add_continent_column(filtered_medals, 'country_code')
-
-if selected_countries:
-    filtered_medals_total = filtered_medals_total[filtered_medals_total['country'].isin(selected_countries)]
-    if not filtered_medals.empty:
-        filtered_medals = filtered_medals[filtered_medals['country'].isin(selected_countries)]
-
-if selected_continents:
-    filtered_medals_total = filtered_medals_total[filtered_medals_total['continent'].isin(selected_continents)]
-    if not filtered_medals.empty and 'continent' in filtered_medals.columns:
-        filtered_medals = filtered_medals[filtered_medals['continent'].isin(selected_continents)]
-
-# Calculate display totals based on medal type selection
-if not filtered_medals_total.empty:
-    medal_cols = []
-    if show_gold:
-        medal_cols.append('Gold')
-    if show_silver:
-        medal_cols.append('Silver')
-    if show_bronze:
-        medal_cols.append('Bronze')
-    
-    if medal_cols:
-        filtered_medals_total['Display_Total'] = filtered_medals_total[medal_cols].sum(axis=1)
-        filtered_medals_total = filtered_medals_total[filtered_medals_total['Display_Total'] > 0]
+    medals_by_country = pd.DataFrame()
 
 st.sidebar.markdown("---")
-st.sidebar.info(f"📊 Showing data for **{len(filtered_medals_total)}** countries")
+st.sidebar.info(f"📊 Showing data for **{len(medals_by_country)}** countries")
 
 # ===== 1. WORLD MEDAL MAP =====
 st.header("🌍 World Medal Map")
 st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 20px;'>Global distribution of Olympic medals by country</p>", unsafe_allow_html=True)
 
-if not filtered_medals_total.empty:
+if not medals_by_country.empty:
     fig_map = px.choropleth(
-        filtered_medals_total,
+        medals_by_country,
         locations='country_code',
         locationmode='ISO-3',
         color='Display_Total',
@@ -212,40 +148,18 @@ from utils.visualizations import create_enhanced_sunburst, create_enhanced_treem
 
 tab1, tab2 = st.tabs(["📊 Sunburst Chart", "🗂️ Treemap"])
 
-# Prepare hierarchy data
+# Prepare hierarchy data from filtered medals
 grouped = None
 sport_col = None
 
-if not medals_df.empty and 'continent' in medals_df.columns:
-    hierarchy_data = medals_df.copy()
-    
-    # Apply filters
-    if selected_countries:
-        hierarchy_data = hierarchy_data[hierarchy_data['country'].isin(selected_countries)]
-    if selected_continents:
-        hierarchy_data = hierarchy_data[hierarchy_data['continent'].isin(selected_continents)]
-    
-    # Filter by medal type
-    if 'medal_type' in hierarchy_data.columns:
-        medal_type_filter = []
-        if show_gold:
-            medal_type_filter.append('gold')
-        if show_silver:
-            medal_type_filter.append('silver')
-        if show_bronze:
-            medal_type_filter.append('bronze')
-        
-        if medal_type_filter:
-            mask = hierarchy_data['medal_type'].str.lower().str.contains('|'.join(medal_type_filter), na=False)
-            hierarchy_data = hierarchy_data[mask]
-    
+if not filtered_medals.empty and 'continent' in filtered_medals.columns:
     # Determine sport column
-    sport_col = 'discipline' if 'discipline' in hierarchy_data.columns else 'sport'
+    sport_col = 'discipline' if 'discipline' in filtered_medals.columns else 'sport'
     
-    # Group for hierarchy
-    if not hierarchy_data.empty and sport_col in hierarchy_data.columns:
+    # Group for hierarchy - count individual medals
+    if sport_col in filtered_medals.columns:
         try:
-            grouped = hierarchy_data.groupby(['continent', 'country', sport_col]).size().reset_index(name='medal_count')
+            grouped = filtered_medals.groupby(['continent', 'country', sport_col]).size().reset_index(name='medal_count')
         except Exception as e:
             st.error(f"Error creating hierarchy: {str(e)}")
 
@@ -265,7 +179,7 @@ with tab1:
         col2.metric("🌎 Countries", grouped['country'].nunique())
         col3.metric("🏅 Sports", grouped[sport_col].nunique())
     else:
-        st.info("No hierarchical data available. All medal types are selected by default - try adjusting filters.")
+        st.info("No hierarchical data available for the selected filters.")
 
 with tab2:
     if grouped is not None and not grouped.empty:
@@ -282,7 +196,7 @@ with tab2:
         if not top_country.empty:
             st.success(f"🏆 **Top Performer:** {top_country.index[0]} with **{top_country.values[0]:,}** medals")
     else:
-        st.info("No hierarchical data available. All medal types are selected by default - try adjusting filters.")
+        st.info("No hierarchical data available for the selected filters.")
 
 st.markdown("---")
 
@@ -292,10 +206,15 @@ st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 20px;'
 
 from utils.visualizations import create_grouped_bar_chart
 
-if not filtered_medals_total.empty:
-    continent_medals = filtered_medals_total.groupby('continent')[['Gold', 'Silver', 'Bronze']].sum().reset_index()
+if not medals_by_country.empty:
+    continent_medals = medals_by_country.groupby('continent')[['Gold', 'Silver', 'Bronze']].sum().reset_index()
     continent_medals['Total'] = continent_medals['Gold'] + continent_medals['Silver'] + continent_medals['Bronze']
     continent_medals = continent_medals.sort_values('Total', ascending=False)
+    
+    # Determine which medals to show based on filters
+    show_gold = 'Gold' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
+    show_silver = 'Silver' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
+    show_bronze = 'Bronze' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
     
     fig_continent = create_grouped_bar_chart(
         continent_medals,
@@ -328,7 +247,7 @@ if not filtered_medals_total.empty:
                     padding: 20px; border-radius: 10px; border-left: 5px solid {COLORS['secondary']};'>
             <h4 style='color: {COLORS['secondary']}; margin: 0 0 10px 0;'>📊 Global Stats</h4>
             <p style='color: {COLORS['text']}; font-size: 1.5rem; font-weight: bold; margin: 0;'>{total_continents} Continents</p>
-            <p style='color: {COLORS['text_secondary']}; margin: 5px 0 0 0;'>{total_medals_all:,} medals distributed</p>
+            <p style='color: {COLORS['text_secondary']}; margin: 5px 0 0 0;'>{int(total_medals_all):,} medals distributed</p>
         </div>
         """, unsafe_allow_html=True)
 else:
@@ -340,8 +259,13 @@ st.markdown("---")
 st.header("🏆 Top 20 Countries Medal Rankings")
 st.markdown(f"<p style='color: {COLORS['text_secondary']}; margin-bottom: 20px;'>Elite nations leading the Olympic medal race</p>", unsafe_allow_html=True)
 
-if not filtered_medals_total.empty:
-    top_20 = filtered_medals_total.nlargest(20, 'Display_Total')
+if not medals_by_country.empty:
+    top_20 = medals_by_country.nlargest(20, 'Display_Total')
+    
+    # Determine which medals to show based on filters
+    show_gold = 'Gold' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
+    show_silver = 'Silver' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
+    show_bronze = 'Bronze' in filters.get('medal_types', ['Gold', 'Silver', 'Bronze'])
     
     fig_top20 = create_grouped_bar_chart(
         top_20,

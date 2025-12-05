@@ -222,6 +222,6 @@ MIT License - Dataset from [Kaggle](https://www.kaggle.com/datasets/piterfm/pari
 
 **Live Demo:** [Streamlit Cloud Link](https://paris-2024-olympics-dashboard.streamlit.app/)
 
-**Video Demo:**
+**Videos Demo:** [Videos Link](https://drive.google.com/drive/folders/1xl0IqH72gHJ5sicp-oPPGqmYE585o6SS?usp=sharing)
 
 ---
