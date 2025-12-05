@@ -4,11 +4,6 @@
    HIDE STREAMLIT UI ELEMENTS - Deploy, Menu, Buttons
    ============================================================================ */
 
-/* Hide "Deploy" button */
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
 /* Hide main menu (three dots) */
 #MainMenu {
     visibility: hidden !important;
@@ -26,23 +21,8 @@ footer {
     display: none !important;
 }
 
-/* Hide header menu */
-header[data-testid="stHeader"] {
-    display: none !important;
-}
-
 /* Hide "Share" button */
 [data-testid="stToolbarActions"] {
-    display: none !important;
-}
-
-/* Hide top-right menu items */
-.stDeployButton {
-    display: none !important;
-}
-
-/* Hide all action buttons in toolbar */
-section[data-testid="stSidebarNav"]::before {
     display: none !important;
 }
 
