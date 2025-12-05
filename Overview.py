@@ -163,10 +163,66 @@ def calculate_total_sports_with_participation(medallists_df, all_results, filter
     return len(all_sports)
 
 # ===== FILTERS =====
-filters = create_sidebar_filters(athletes_df, medals_total_df, events_df, show_sport=False)
+filters = create_sidebar_filters(athletes_df, medallists_df, events_df, show_sport=False)
+
+# For gender/athlete-specific filters, we need to filter medallists and aggregate
+if filters.get('gender') != "All" or filters.get('age_range') is not None:
+    # Filter medallists based on gender/age
+    filtered_medallists = apply_filters(medallists_df, filters) if not medallists_df.empty else medallists_df
+    
+    # Aggregate filtered medallists to create medals_total-like data
+    if not filtered_medallists.empty:
+        # IMPORTANT: Remove duplicates for team events
+        # Each medal should be counted once per country, not once per athlete
+        # Group by country, medal_type, discipline, event to get unique medals
+        unique_medals = filtered_medallists.groupby(
+            ['country_code', 'country', 'medal_type', 'discipline', 'event']
+        ).first().reset_index()
+        
+        # Now count medals by country
+        country_col = 'country' if 'country' in unique_medals.columns else 'country_code'
+        
+        # Count each medal type
+        medal_counts = unique_medals.groupby([country_col, 'medal_type']).size().unstack(fill_value=0)
+        
+        # Create base dataframe with country
+        filtered_medals_total = pd.DataFrame({country_col: medal_counts.index})
+        
+        # Add country name if we have country_code
+        if country_col == 'country_code' and 'country' in unique_medals.columns:
+            country_names = unique_medals[['country_code', 'country']].drop_duplicates()
+            filtered_medals_total = filtered_medals_total.merge(country_names, on='country_code', how='left')
+        
+        # Add medal type columns
+        for medal in ['Gold Medal', 'Silver Medal', 'Bronze Medal']:
+            col_name = medal.split()[0]  # 'Gold', 'Silver', 'Bronze'
+            if medal in medal_counts.columns:
+                filtered_medals_total[col_name] = medal_counts[medal].values
+            else:
+                filtered_medals_total[col_name] = 0
+        
+        # Ensure numeric types
+        filtered_medals_total[['Gold', 'Silver', 'Bronze']] = filtered_medals_total[['Gold', 'Silver', 'Bronze']].fillna(0).astype(int)
+        
+        # Calculate Total
+        filtered_medals_total['Total'] = filtered_medals_total[['Gold', 'Silver', 'Bronze']].sum(axis=1)
+        
+        # Add continent info
+        from utils.continent_mapper import add_continent_column
+        if 'continent' not in filtered_medals_total.columns:
+            # Use the appropriate column for continent mapping
+            continent_col = 'country_code' if 'country_code' in filtered_medals_total.columns else 'country'
+            filtered_medals_total = add_continent_column(filtered_medals_total, continent_col)
+        
+        # Sort by Total medals
+        filtered_medals_total = filtered_medals_total.sort_values('Total', ascending=False).reset_index(drop=True)
+    else:
+        filtered_medals_total = pd.DataFrame()
+else:
+    # No gender/age filter, use pre-aggregated medals_total
+    filtered_medals_total = apply_filters(medals_total_df, filters) if not medals_total_df.empty else medals_total_df
 
 filtered_athletes = apply_filters(athletes_df, filters) if not athletes_df.empty else athletes_df
-filtered_medals_total = apply_filters(medals_total_df, filters) if not medals_total_df.empty else medals_total_df
 filtered_events = apply_filters(events_df, filters) if not events_df.empty else events_df
 
 # Show filter summary in sidebar
